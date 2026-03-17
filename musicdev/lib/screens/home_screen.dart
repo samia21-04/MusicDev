@@ -53,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  // TODO: Navigate to Focus Session screen
+                  // Navigate to Focus Session screen
                   // Pass mood and energy level as arguments
                 },
                 style: ElevatedButton.styleFrom(
