@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../main.dart';
-import '../widgets/sound_tile.dart';
 
 class SoundscapeBuilderScreen extends StatefulWidget {
   const SoundscapeBuilderScreen({super.key});
@@ -29,6 +28,7 @@ class _SoundscapeBuilderScreenState extends State<SoundscapeBuilderScreen> {
     'Café Ambience': 0.5,
   };
 
+  // ── Sound icons map used directly in build ────────
   final Map<String, IconData> _soundIcons = {
     'Rain': Icons.water_drop_outlined,
     'Lo-Fi Music': Icons.headphones_outlined,
@@ -52,7 +52,8 @@ class _SoundscapeBuilderScreenState extends State<SoundscapeBuilderScreen> {
         content: const Text('AI Focus DJ applied a calm study mix!',
             style: TextStyle(color: AppColors.cream)),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
@@ -148,7 +149,8 @@ class _SoundscapeBuilderScreenState extends State<SoundscapeBuilderScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 8),
                   ),
-                  child: const Text('Mix', style: TextStyle(fontSize: 13)),
+                  child:
+                      const Text('Mix', style: TextStyle(fontSize: 13)),
                 ),
               ],
             ),
@@ -159,14 +161,67 @@ class _SoundscapeBuilderScreenState extends State<SoundscapeBuilderScreen> {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: _activeSounds.keys.map((sound) {
-                return SoundTile(
-                  soundName: sound,
-                  isActive: _activeSounds[sound]!,
-                  volume: _volumes[sound]!,
-                  onToggle: (val) =>
-                      setState(() => _activeSounds[sound] = val),
-                  onVolumeChanged: (val) =>
-                      setState(() => _volumes[sound] = val),
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 8),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment:
+                              MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  _soundIcons[sound],
+                                  color: _activeSounds[sound]!
+                                      ? AppColors.maroonLight
+                                      : AppColors.creamFaint,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  sound,
+                                  style: TextStyle(
+                                    color: _activeSounds[sound]!
+                                        ? AppColors.cream
+                                        : AppColors.creamMuted,
+                                    fontSize: 15,
+                                    fontWeight: _activeSounds[sound]!
+                                        ? FontWeight.w500
+                                        : FontWeight.normal,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Switch(
+                              value: _activeSounds[sound]!,
+                              onChanged: (val) => setState(
+                                  () => _activeSounds[sound] = val),
+                            ),
+                          ],
+                        ),
+                        if (_activeSounds[sound]!)
+                          Row(
+                            children: [
+                              const Icon(Icons.volume_down,
+                                  color: AppColors.creamFaint, size: 16),
+                              Expanded(
+                                child: Slider(
+                                  value: _volumes[sound]!,
+                                  onChanged: (val) => setState(
+                                      () => _volumes[sound] = val),
+                                ),
+                              ),
+                              const Icon(Icons.volume_up,
+                                  color: AppColors.creamFaint, size: 16),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ),
                 );
               }).toList(),
             ),
