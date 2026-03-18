@@ -1,16 +1,35 @@
-# musicdev
+# Adaptive Focus Studio & Mood Soundscapes
 
-A new Flutter project.
+A Flutter app that helps users stay focused while studying or working 
+through personalized soundscapes and Pomodoro-style focus sessions.
 
-## Getting Started
+## Features
+- Personalized focus sessions based on mood and energy level
+- Pomodoro timer with adaptive breaks
+- Soundscape builder with AI Focus DJ
+- Productivity analytics and charts
+- Saved session blueprints and audio presets
 
-This project is a starting point for a Flutter application.
+## Screens
+- Home Screen
+- Focus Session Screen
+- Soundscape Builder
+- Analytics
+- Settings
 
-A few resources to get you started if this is your first Flutter project:
+## Setup Instructions
+1. Clone the repo: `git clone https://github.com/samia21-04/AdaptiveFocusStudio.git`
+2. Navigate into the folder: `cd AdaptiveFocusStudio`
+3. Install dependencies: `flutter pub get`
+4. Run the app: `flutter run`
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Dependencies
+- sqflite — local SQLite database
+- shared_preferences — user settings storage
+- just_audio — background sound playback
+- fl_chart — analytics charts
+- provider — state management
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Known Issues / Limitations
+- Audio files require manual addition to assets/sounds/ folder
+- AI Focus DJ uses rule-based logic (no external API)
