@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../main.dart';
+import '../widgets/timer_ring.dart';
 
 class FocusSessionScreen extends StatefulWidget {
   const FocusSessionScreen({super.key});
@@ -9,26 +11,22 @@ class FocusSessionScreen extends StatefulWidget {
 }
 
 class _FocusSessionScreenState extends State<FocusSessionScreen> {
-  int _workDuration = 25 * 60; // seconds
+  int _workDuration = 25 * 60;
   int _secondsRemaining = 25 * 60;
   bool _isRunning = false;
   bool _isPaused = false;
+  bool _isWorkInterval = true;
   int _completedPomodoros = 0;
   Timer? _timer;
 
   void _startTimer() {
-    setState(() => _isRunning = true);
+    setState(() { _isRunning = true; _isPaused = false; });
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_secondsRemaining > 0) {
         setState(() => _secondsRemaining--);
       } else {
         _timer?.cancel();
-        setState(() {
-          _completedPomodoros++;
-          _isRunning = false;
-          _secondsRemaining = _workDuration;
-        });
-        // TODO: Show break dialog here
+        _handleIntervalComplete();
       }
     });
   }
@@ -45,14 +43,75 @@ class _FocusSessionScreenState extends State<FocusSessionScreen> {
 
   void _endSession() {
     _timer?.cancel();
-    // TODO: Save session to SQLite before popping
-    Navigator.pop(context);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.card,
+        title: const Text('End Session?',
+            style: TextStyle(color: AppColors.cream)),
+        content: const Text('Your progress will be saved.',
+            style: TextStyle(color: AppColors.creamMuted)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel',
+                style: TextStyle(color: AppColors.creamMuted)),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              setState(() {
+                _isRunning = false;
+                _isPaused = false;
+                _secondsRemaining = _workDuration;
+                _completedPomodoros = 0;
+                _isWorkInterval = true;
+              });
+            },
+            child: const Text('End',
+                style: TextStyle(color: AppColors.maroonLight)),
+          ),
+        ],
+      ),
+    );
   }
 
-  String _formatTime(int seconds) {
-    final m = (seconds ~/ 60).toString().padLeft(2, '0');
-    final s = (seconds % 60).toString().padLeft(2, '0');
-    return '$m:$s';
+  void _handleIntervalComplete() {
+    if (_isWorkInterval) {
+      setState(() {
+        _completedPomodoros++;
+        _isWorkInterval = false;
+        _secondsRemaining = 5 * 60; // 5 min break
+      });
+      _showIntervalDialog('Break Time!', 'Great work! Take a 5 minute break.');
+    } else {
+      setState(() {
+        _isWorkInterval = true;
+        _secondsRemaining = _workDuration;
+      });
+      _showIntervalDialog('Back to Focus!', 'Break is over. Ready to focus?');
+    }
+  }
+
+  void _showIntervalDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.card,
+        title: Text(title, style: const TextStyle(color: AppColors.cream)),
+        content: Text(message,
+            style: const TextStyle(color: AppColors.creamMuted)),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _startTimer();
+            },
+            child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -64,46 +123,123 @@ class _FocusSessionScreenState extends State<FocusSessionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Focus Session')),
-      body: Center(
+      appBar: AppBar(
+        title: Text(_isWorkInterval ? 'Focus Session' : 'Break Time'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(24),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              _formatTime(_secondsRemaining),
-              style: const TextStyle(fontSize: 72, fontWeight: FontWeight.bold),
+            const SizedBox(height: 20),
+
+            // ── Pomodoro counter ──────────────────────────
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(4, (i) => Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: i < _completedPomodoros
+                      ? AppColors.maroon
+                      : AppColors.maroonDark,
+                ),
+              )),
             ),
-            const SizedBox(height: 12),
-            Text('Pomodoros completed: $_completedPomodoros'),
+            const SizedBox(height: 8),
+            Text(
+              '$_completedPomodoros / 4 Pomodoros',
+              style: const TextStyle(color: AppColors.creamMuted, fontSize: 13),
+            ),
             const SizedBox(height: 40),
+
+            // ── Timer Ring ────────────────────────────────
+            TimerRing(
+              secondsRemaining: _secondsRemaining,
+              totalSeconds: _isWorkInterval ? _workDuration : 5 * 60,
+              label: _isWorkInterval ? 'Focus' : 'Break',
+            ),
+            const SizedBox(height: 48),
+
+            // ── Controls ──────────────────────────────────
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (!_isRunning)
-                  ElevatedButton(
+                  ElevatedButton.icon(
                     onPressed: _startTimer,
-                    child: const Text('Start'),
+                    icon: const Icon(Icons.play_arrow_rounded),
+                    label: const Text('Start'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 14),
+                    ),
                   ),
                 if (_isRunning && !_isPaused)
-                  ElevatedButton(
+                  ElevatedButton.icon(
                     onPressed: _pauseTimer,
-                    child: const Text('Pause'),
+                    icon: const Icon(Icons.pause_rounded),
+                    label: const Text('Pause'),
                   ),
                 if (_isPaused)
-                  ElevatedButton(
+                  ElevatedButton.icon(
                     onPressed: _resumeTimer,
-                    child: const Text('Resume'),
+                    icon: const Icon(Icons.play_arrow_rounded),
+                    label: const Text('Resume'),
                   ),
-                const SizedBox(width: 16),
-                OutlinedButton(
-                  onPressed: _endSession,
-                  child: const Text('End Session'),
-                ),
+                if (_isRunning || _isPaused) ...[
+                  const SizedBox(width: 12),
+                  OutlinedButton.icon(
+                    onPressed: _endSession,
+                    icon: const Icon(Icons.stop_rounded),
+                    label: const Text('End'),
+                  ),
+                ]
               ],
+            ),
+            const SizedBox(height: 32),
+
+            // ── Session info card ─────────────────────────
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _infoItem(Icons.timer_outlined, '25 min', 'Work'),
+                    _divider(),
+                    _infoItem(Icons.coffee_outlined, '5 min', 'Break'),
+                    _divider(),
+                    _infoItem(Icons.music_note_outlined, 'Lo-Fi', 'Sound'),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _infoItem(IconData icon, String value, String label) {
+    return Column(
+      children: [
+        Icon(icon, color: AppColors.maroonLight, size: 20),
+        const SizedBox(height: 4),
+        Text(value,
+            style: const TextStyle(
+                color: AppColors.cream,
+                fontWeight: FontWeight.w500,
+                fontSize: 14)),
+        Text(label,
+            style: const TextStyle(
+                color: AppColors.creamFaint, fontSize: 11)),
+      ],
+    );
+  }
+
+  Widget _divider() {
+    return Container(height: 32, width: 0.5, color: AppColors.maroonDark);
   }
 }
