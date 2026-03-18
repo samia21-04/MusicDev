@@ -62,7 +62,7 @@ class MyApp extends StatelessWidget {
             letterSpacing: 0.5,
           ),
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           color: AppColors.card,
           elevation: 0,
           shape: RoundedRectangleBorder(
